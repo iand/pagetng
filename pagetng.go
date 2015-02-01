@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/iand/ntriples"
@@ -14,16 +15,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	g := &Graph{}
-
-	ntfile, err := os.Open(os.Args[1])
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
-		os.Exit(1)
+	var input io.Reader
+	if os.Args[1] == "-" {
+		input = os.Stdin
+	} else {
+		ntfile, err := os.Open(os.Args[1])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
+			os.Exit(1)
+		}
+		defer ntfile.Close()
+		input = ntfile
 	}
-	defer ntfile.Close()
 
-	err = g.LoadNTriples(ntfile)
+	g := &Graph{}
+	err := g.LoadNTriples(input)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
 		os.Exit(1)
