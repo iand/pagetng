@@ -310,7 +310,7 @@ func writePropertyValueList(w *bufio.Writer, c *Context, properties []ntriples.R
 				writeIRI(w, v)
 				w.WriteString(`"><img src="`)
 				w.WriteString(html.EscapeString(v.Value))
-				w.WriteString(`" /></a>'`)
+				w.WriteString(`" /></a>`)
 			} else {
 				render(w, c.New(v), false, true, 0)
 			}
