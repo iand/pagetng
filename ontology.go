@@ -234,7 +234,7 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 			w.WriteRune('\n')
 			w.WriteString(fmt.Sprintf(`<h%d id="%s">%s</h%d>`, level+2, html.EscapeString(termID(tc.Term)), html.EscapeString(tc.Label(true, false)), level+2))
 			w.WriteRune('\n')
-			renderTerm(w, tc, true, false, level+1)
+			renderTerm(w, tc, true, false, level+2)
 		}
 	}
 

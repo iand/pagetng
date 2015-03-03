@@ -47,6 +47,9 @@ func main() {
 	spl := SimplePropertyLabeller{}
 	spl.Process(g)
 
+	sin := SimpleInferencer{}
+	sin.Process(g)
+
 	c := &Context{
 		Term:  IRI(uri),
 		Graph: g,
@@ -60,6 +63,6 @@ func main() {
 		w.WriteString("uri: " + uri + "\n")
 		w.WriteString("----\n")
 	}
-	render(w, c, false, false, 0)
+	render(w, c, false, false, 1)
 	w.Flush()
 }

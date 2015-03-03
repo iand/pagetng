@@ -25,6 +25,7 @@ var GeneralDescribingProperties = []ntriples.RdfTerm{
 	IRI("http://purl.org/rss/1.0/description"),
 	IRI("http://purl.org/dc/terms/abstract"),
 	IRI("http://purl.org/vocab/bio/0.1/olb"),
+	IRI("http://www.w3.org/2004/02/skos/core#definition"),
 }
 
 var wordRegexp = regexp.MustCompile("(^[a-z]+)|([A-Z][^A-Z]+)")
