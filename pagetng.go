@@ -5,12 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/iand/ntriples"
 )
 
 var o = flag.String("o", "html", "output format, one of md or html")
+var meta = flag.String("m", "", "filename of additonal front material to include verbatim")
 
 func main() {
 	flag.Parse()
@@ -59,8 +61,21 @@ func main() {
 	w := bufio.NewWriter(os.Stdout)
 
 	if *o == "md" {
+
 		w.WriteString("title: " + c.Label(true, true) + "\n")
 		w.WriteString("uri: " + uri + "\n")
+
+		if *meta != "" {
+			frontmaterial, err := ioutil.ReadFile(*meta)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
+				os.Exit(1)
+			}
+			if len(frontmaterial) != 0 {
+				w.WriteString(string(frontmaterial))
+			}
+		}
+
 		w.WriteString("----\n")
 	}
 	render(w, c, false, false, 1)
