@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iand/ntriples"
+	"github.com/iand/gordf"
 )
 
 var DateLayouts = []string{
@@ -17,68 +17,68 @@ var DateLayouts = []string{
 
 type RenderFunc func(w *bufio.Writer, c *Context, inline bool, brief bool, level int)
 
-var PreferredPropertyOrder = map[ntriples.RdfTerm]int{
-	IRI("http://www.w3.org/2004/02/skos/core#prefLabel"):   95,
-	IRI("http://www.w3.org/2000/01/rdf-schema#label"):      90,
-	IRI("http://purl.org/dc/terms/title"):                  85,
-	IRI("http://purl.org/dc/elements/1.1/title"):           80,
-	IRI("http://xmlns.com/foaf/0.1/name"):                  75,
-	IRI("http://www.w3.org/2004/02/skos/core#definition"):  70,
-	IRI("http://open.vocab.org/terms/subtitle"):            65,
-	IRI("http://www.w3.org/2000/01/rdf-schema#comment"):    60,
-	IRI("http://purl.org/dc/terms/description"):            55,
-	IRI("http://purl.org/dc/elements/1.1/description"):     50,
-	IRI("http://purl.org/vocab/bio/0.1/olb"):               45,
-	IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"): 40,
-	IRI("http://purl.org/dc/terms/creator"):                35,
-	IRI("http://purl.org/dc/terms/contributor"):            30,
-	IRI("http://purl.org/dc/terms/publisher"):              25,
-	IRI("http://xmlns.com/foaf/0.1/depiction"):             20,
-	IRI("http://xmlns.com/foaf/0.1/img"):                   15,
-	IRI("http://purl.org/dc/terms/subject"):                10,
-	IRI("http://purl.org/dc/terms/identifier"):             5,
+var PreferredPropertyOrder = map[rdf.Term]int{
+	rdf.IRI("http://www.w3.org/2004/02/skos/core#prefLabel"):   95,
+	rdf.IRI("http://www.w3.org/2000/01/rdf-schema#label"):      90,
+	rdf.IRI("http://purl.org/dc/terms/title"):                  85,
+	rdf.IRI("http://purl.org/dc/elements/1.1/title"):           80,
+	rdf.IRI("http://xmlns.com/foaf/0.1/name"):                  75,
+	rdf.IRI("http://www.w3.org/2004/02/skos/core#definition"):  70,
+	rdf.IRI("http://open.vocab.org/terms/subtitle"):            65,
+	rdf.IRI("http://www.w3.org/2000/01/rdf-schema#comment"):    60,
+	rdf.IRI("http://purl.org/dc/terms/description"):            55,
+	rdf.IRI("http://purl.org/dc/elements/1.1/description"):     50,
+	rdf.IRI("http://purl.org/vocab/bio/0.1/olb"):               45,
+	rdf.IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"): 40,
+	rdf.IRI("http://purl.org/dc/terms/creator"):                35,
+	rdf.IRI("http://purl.org/dc/terms/contributor"):            30,
+	rdf.IRI("http://purl.org/dc/terms/publisher"):              25,
+	rdf.IRI("http://xmlns.com/foaf/0.1/depiction"):             20,
+	rdf.IRI("http://xmlns.com/foaf/0.1/img"):                   15,
+	rdf.IRI("http://purl.org/dc/terms/subject"):                10,
+	rdf.IRI("http://purl.org/dc/terms/identifier"):             5,
 }
 
-var ImageProperties = map[ntriples.RdfTerm]bool{
-	IRI("http://xmlns.com/foaf/0.1/depiction"): true,
-	IRI("http://xmlns.com/foaf/0.1/img"):       true,
-	IRI("http://xmlns.com/foaf/0.1/logo"):      true,
+var ImageProperties = map[rdf.Term]bool{
+	rdf.IRI("http://xmlns.com/foaf/0.1/depiction"): true,
+	rdf.IRI("http://xmlns.com/foaf/0.1/img"):       true,
+	rdf.IRI("http://xmlns.com/foaf/0.1/logo"):      true,
 }
 
-var CreatorProperties = []ntriples.RdfTerm{
-	IRI("http://purl.org/dc/elements/1.1/creator"),
-	IRI("http://purl.org/dc/terms/creator"),
-	IRI("http://xmlns.com/foaf/0.1/maker"),
+var CreatorProperties = []rdf.Term{
+	rdf.IRI("http://purl.org/dc/elements/1.1/creator"),
+	rdf.IRI("http://purl.org/dc/terms/creator"),
+	rdf.IRI("http://xmlns.com/foaf/0.1/maker"),
 }
 
-var ContributorProperties = []ntriples.RdfTerm{
-	IRI("http://purl.org/dc/elements/1.1/contributor"),
-	IRI("http://purl.org/dc/terms/contributor"),
+var ContributorProperties = []rdf.Term{
+	rdf.IRI("http://purl.org/dc/elements/1.1/contributor"),
+	rdf.IRI("http://purl.org/dc/terms/contributor"),
 }
 
-var SourceProperties = []ntriples.RdfTerm{
-	IRI("http://purl.org/dc/elements/1.1/source"),
-	IRI("http://purl.org/dc/terms/source"),
+var SourceProperties = []rdf.Term{
+	rdf.IRI("http://purl.org/dc/elements/1.1/source"),
+	rdf.IRI("http://purl.org/dc/terms/source"),
 }
 
 type TypeRenderer struct {
-	Type     ntriples.RdfTerm
+	Type     rdf.Term
 	Renderer RenderFunc
 }
 
 func render(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
-	if c.Term.IsLiteral() {
+	if rdf.IsLiteral(c.Term) {
 		renderLiteral(w, c, inline, brief, level)
 		return
 	}
 
-	var Renderers = []TypeRenderer{
-		TypeRenderer{Type: IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"), Renderer: renderTerm},
-		TypeRenderer{Type: IRI("http://www.w3.org/2000/01/rdf-schema#Class"), Renderer: renderTerm},
-		TypeRenderer{Type: IRI("http://www.w3.org/2002/07/owl#Ontology"), Renderer: renderOntology},
-		TypeRenderer{Type: IRI("http://purl.org/rss/1.0/channel"), Renderer: renderRSS},
-		TypeRenderer{Type: IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"), Renderer: renderSeq},
-		TypeRenderer{Type: IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag"), Renderer: renderBag},
+	Renderers := []TypeRenderer{
+		{Type: rdf.IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"), Renderer: renderTerm},
+		{Type: rdf.IRI("http://www.w3.org/2000/01/rdf-schema#Class"), Renderer: renderTerm},
+		{Type: rdf.IRI("http://www.w3.org/2002/07/owl#Ontology"), Renderer: renderOntology},
+		{Type: rdf.IRI("http://purl.org/rss/1.0/channel"), Renderer: renderRSS},
+		{Type: rdf.IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"), Renderer: renderSeq},
+		{Type: rdf.IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag"), Renderer: renderBag},
 	}
 
 	for _, tr := range Renderers {
@@ -115,7 +115,7 @@ func renderBag(w *bufio.Writer, c *Context, inline bool, brief bool, level int) 
 }
 
 func renderBrief(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
-	if c.Term.TermType == ntriples.RdfLiteral {
+	if c.Term.Kind == rdf.LiteralTerm { // TODO: IsLiteral
 		renderLiteral(w, c, inline, brief, level)
 		return
 	}
@@ -132,7 +132,7 @@ func renderBrief(w *bufio.Writer, c *Context, inline bool, brief bool, level int
 }
 
 func renderLiteral(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
-	if !c.Term.IsLiteral() {
+	if !rdf.IsLiteral(c.Term) {
 		return
 	}
 
@@ -141,7 +141,7 @@ func renderLiteral(w *bufio.Writer, c *Context, inline bool, brief bool, level i
 
 	value := c.Term.Value
 	escapeValue := true
-	switch c.Term.DataType {
+	switch c.Term.Datatype {
 	case "http://www.w3.org/2001/XMLSchema#date":
 		for _, layout := range DateLayouts {
 			if dt, err := time.Parse(layout, value); err == nil {
@@ -158,14 +158,14 @@ func renderLiteral(w *bufio.Writer, c *Context, inline bool, brief bool, level i
 	} else {
 		w.WriteString(value)
 	}
-	if c.Term.IsLanguageLiteral() {
+	if c.Term.Language != "" {
 		w.WriteString(`<span class="lang">[`)
 		w.WriteString(html.EscapeString(c.Term.Language))
 		w.WriteString(`]</span>`)
 	}
 }
 
-func writeDl(w *bufio.Writer, c *Context, properties []ntriples.RdfTerm, singular string, plural string) {
+func writeDl(w *bufio.Writer, c *Context, properties []rdf.Term, singular string, plural string) {
 	vals := c.Objects(properties...)
 
 	if len(vals) == 0 {
@@ -240,7 +240,7 @@ func writeLinkedIRI(w *bufio.Writer, c *Context, label string, useDefiniteArticl
 	w.WriteString(html.EscapeString(c.Term.Value))
 }
 
-func writeIRI(w *bufio.Writer, iri ntriples.RdfTerm) {
+func writeIRI(w *bufio.Writer, iri rdf.Term) {
 	// TODO: $this->urispace->resource_uri_to_request_uri($uri)
 	w.WriteString(html.EscapeString(iri.Value))
 }
@@ -270,7 +270,7 @@ func writeLabelledIRI(w *bufio.Writer, c *Context, useDefiniteArticle bool) {
 	}
 }
 
-func writePropertyValueList(w *bufio.Writer, c *Context, properties []ntriples.RdfTerm) {
+func writePropertyValueList(w *bufio.Writer, c *Context, properties []rdf.Term) {
 	headerWritten := false
 
 	rowClass := "odd"
@@ -298,14 +298,14 @@ func writePropertyValueList(w *bufio.Writer, c *Context, properties []ntriples.R
 
 		w.WriteString(`<tr><th valign="top" class="`)
 		w.WriteString(rowClass)
-		w.WriteString(`><div class="label">`)
+		w.WriteString(`"><div class="label">`)
 		writeLinkedIRI(w, c.New(p), label, false)
 		w.WriteString(`</div></th><td valign="top" width="80%" class="`)
 		w.WriteString(rowClass)
 		w.WriteString(`">`)
 
 		for _, v := range vals {
-			if _, exists := ImageProperties[p]; exists && v.IsIRI() {
+			if _, exists := ImageProperties[p]; exists && rdf.IsIRI(v) {
 				w.WriteString(`<a href="`)
 				writeIRI(w, v)
 				w.WriteString(`"><img src="`)
@@ -331,5 +331,4 @@ func writePropertyValueList(w *bufio.Writer, c *Context, properties []ntriples.R
 	if headerWritten {
 		w.WriteString(`</table>`)
 	}
-
 }

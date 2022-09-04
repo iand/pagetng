@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/iand/ntriples"
+	"github.com/iand/gordf"
 )
 
 func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
@@ -30,21 +30,21 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 	c.SetDone(ContributorProperties...)
 	c.SetDone(SourceProperties...)
 
-	abstracts := c.Objects(IRI("http://purl.org/dc/terms/abstract"))
+	abstracts := c.Objects(rdf.IRI("http://purl.org/dc/terms/abstract"))
 	for _, a := range abstracts {
 		w.WriteString(`<p class="abstract">`)
 		w.WriteString(html.EscapeString(a.Value))
 		w.WriteString(`</p>`)
 	}
-	c.SetDone(IRI("http://purl.org/dc/terms/abstract"))
+	c.SetDone(rdf.IRI("http://purl.org/dc/terms/abstract"))
 
-	descriptions := c.Objects(IRI("http://purl.org/dc/terms/description"), IRI("http://purl.org/dc/elements/1.1/description"), IRI("http://www.w3.org/2000/01/rdf-schema#comment"))
+	descriptions := c.Objects(rdf.IRI("http://purl.org/dc/terms/description"), rdf.IRI("http://purl.org/dc/elements/1.1/description"), rdf.IRI("http://www.w3.org/2000/01/rdf-schema#comment"))
 	for _, d := range descriptions {
 		render(w, c.New(d), false, false, 0)
 	}
-	c.SetDone(IRI("http://purl.org/dc/terms/description"), IRI("http://purl.org/dc/elements/1.1/description"), IRI("http://www.w3.org/2000/01/rdf-schema#comment"))
+	c.SetDone(rdf.IRI("http://purl.org/dc/terms/description"), rdf.IRI("http://purl.org/dc/elements/1.1/description"), rdf.IRI("http://www.w3.org/2000/01/rdf-schema#comment"))
 
-	if list, exists := c.FirstIRI(IRI("http://open.vocab.org/terms/discussionList")); exists {
+	if list, exists := c.FirstIRI(rdf.IRI("http://open.vocab.org/terms/discussionList")); exists {
 		label := c.New(list).Label(false, true)
 		if label == list.Value {
 			label = "mailing list"
@@ -54,19 +54,19 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 		w.WriteString(`">`)
 		w.WriteString(html.EscapeString(label))
 		w.WriteString(`"</a></p>`)
-		c.SetDone(IRI("http://open.vocab.org/terms/discussionList"))
+		c.SetDone(rdf.IRI("http://open.vocab.org/terms/discussionList"))
 	}
 
-	if c.Object(IRI("http://www.w3.org/2000/01/rdf-schema#seeAlso")) {
+	if c.Object(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#seeAlso")) {
 		w.WriteString(`<dl class="see-also">`)
-		writeDl(w, c, []ntriples.RdfTerm{IRI("http://www.w3.org/2000/01/rdf-schema#seeAlso")}, "See also", "See also")
+		writeDl(w, c, []rdf.Term{rdf.IRI("http://www.w3.org/2000/01/rdf-schema#seeAlso")}, "See also", "See also")
 		w.WriteString(`</dl>`)
-		c.SetDone(IRI("http://www.w3.org/2000/01/rdf-schema#seeAlso"))
+		c.SetDone(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#seeAlso"))
 	}
 
-	rights, exists := c.FirstLiteral(IRI("http://purl.org/dc/elements/1.1/rights"), "", "en")
+	rights, exists := c.FirstLiteral(rdf.IRI("http://purl.org/dc/elements/1.1/rights"), "", "en")
 	if !exists {
-		rights, exists = c.FirstLiteral(IRI("http://purl.org/dc/terms/rights"), "", "en")
+		rights, exists = c.FirstLiteral(rdf.IRI("http://purl.org/dc/terms/rights"), "", "en")
 	}
 
 	if exists {
@@ -74,32 +74,32 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 		w.WriteString(html.EscapeString(rights.Value))
 		w.WriteString(`<p>`)
 	}
-	c.SetDone(IRI("http://purl.org/dc/elements/1.1/rights"), IRI("http://purl.org/dc/terms/rights"))
+	c.SetDone(rdf.IRI("http://purl.org/dc/elements/1.1/rights"), rdf.IRI("http://purl.org/dc/terms/rights"))
 
-	if c.Object(IRI("http://www.w3.org/2004/02/skos/core#changeNote"), IRI("http://www.w3.org/2004/02/skos/core#historyNote"), IRI("http://purl.org/dc/terms/issued")) {
+	if c.Object(rdf.IRI("http://www.w3.org/2004/02/skos/core#changeNote"), rdf.IRI("http://www.w3.org/2004/02/skos/core#historyNote"), rdf.IRI("http://purl.org/dc/terms/issued")) {
 		w.WriteRune('\n')
 		w.WriteString(fmt.Sprintf(`<h%d id="sec-history">History</h%d>`, level+1, level+1))
 		w.WriteRune('\n')
 		renderHistory(w, c, false, false, level+1)
-		c.SetDone(IRI("http://www.w3.org/2004/02/skos/core#changeNote"), IRI("http://www.w3.org/2004/02/skos/core#historyNote"), IRI("http://purl.org/dc/terms/issued"))
+		c.SetDone(rdf.IRI("http://www.w3.org/2004/02/skos/core#changeNote"), rdf.IRI("http://www.w3.org/2004/02/skos/core#historyNote"), rdf.IRI("http://purl.org/dc/terms/issued"))
 	}
 
 	// Some hackery to get the right URI for the namespace
-	var ns ntriples.RdfTerm
+	var ns rdf.Term
 
-	if c.Subject(IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
+	if c.Subject(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
 		ns = c.Term
-	} else if c.New(IRI(c.Term.Value + "/")).Subject(IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
-		ns = IRI(c.Term.Value + "/")
-	} else if c.New(IRI(c.Term.Value + "#")).Subject(IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
-		ns = IRI(c.Term.Value + "#")
+	} else if c.New(rdf.IRI(c.Term.Value + "/")).Subject(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
+		ns = rdf.IRI(c.Term.Value + "/")
+	} else if c.New(rdf.IRI(c.Term.Value + "#")).Subject(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
+		ns = rdf.IRI(c.Term.Value + "#")
 	}
 
-	if !ns.IsIRI() {
+	if !rdf.IsIRI(ns) {
 		return
 	}
 
-	terms := c.Subjects(IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy"))
+	terms := c.Subjects(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#isDefinedBy"))
 	termContexts := make(AlphaContexts, len(terms))
 	for i := range terms {
 		termContexts[i] = c.New(terms[i])
@@ -113,8 +113,8 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 		}
 		sort.Sort(at)
 
-		preferredNamespaceURI, pnuExists := c.FirstLiteral(IRI("http://purl.org/vocab/vann/preferredNamespaceUri"))
-		preferredNamespacePrefix, pnpExists := c.FirstLiteral(IRI("http://purl.org/vocab/vann/preferredNamespacePrefix"))
+		preferredNamespaceURI, pnuExists := c.FirstLiteral(rdf.IRI("http://purl.org/vocab/vann/preferredNamespaceUri"))
+		preferredNamespacePrefix, pnpExists := c.FirstLiteral(rdf.IRI("http://purl.org/vocab/vann/preferredNamespacePrefix"))
 
 		if pnuExists || pnpExists {
 			w.WriteRune('\n')
@@ -137,13 +137,13 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 			w.WriteString(`</code></pre>`)
 			w.WriteRune('\n')
 		}
-		c.SetDone(IRI("http://purl.org/vocab/vann/preferredNamespaceUri"), IRI("http://purl.org/vocab/vann/preferredNamespacePrefix"))
+		c.SetDone(rdf.IRI("http://purl.org/vocab/vann/preferredNamespaceUri"), rdf.IRI("http://purl.org/vocab/vann/preferredNamespacePrefix"))
 
-		if c.Object(IRI("http://purl.org/vocab/vann/termGroup")) {
+		if c.Object(rdf.IRI("http://purl.org/vocab/vann/termGroup")) {
 			w.WriteRune('\n')
 			w.WriteString(fmt.Sprintf(`<h%d id="sec-termgroup">Terms Grouped by Theme</h%d>`, level+1, level+1))
 			w.WriteRune('\n')
-			for _, v := range c.Objects(IRI("http://purl.org/vocab/vann/termGroup")) {
+			for _, v := range c.Objects(rdf.IRI("http://purl.org/vocab/vann/termGroup")) {
 
 				termGroup := c.New(v)
 				title := termGroup.Label(true, false)
@@ -154,7 +154,7 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 				w.WriteString(html.EscapeString(title))
 				w.WriteString(`: `)
 
-				groupItems := map[int]ntriples.RdfTerm{}
+				groupItems := map[int]rdf.Term{}
 				for _, p := range termGroup.Properties(false) {
 					if num, ok := rdfListItem(p); ok {
 						objs := termGroup.Objects(p)
@@ -166,7 +166,7 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 				}
 
 				nums := []int{}
-				for num, _ := range groupItems {
+				for num := range groupItems {
 					nums = append(nums, num)
 				}
 				sort.Ints(nums)
@@ -192,7 +192,7 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 
 			w.WriteString(`</p>`)
 			w.WriteRune('\n')
-			c.SetDone(IRI("http://purl.org/vocab/vann/termGroup"))
+			c.SetDone(rdf.IRI("http://purl.org/vocab/vann/termGroup"))
 		}
 
 		if len(terms) > 2 {
@@ -238,13 +238,13 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 		}
 	}
 
-	if c.Object(IRI("http://purl.org/vocab/vann/example")) {
+	if c.Object(rdf.IRI("http://purl.org/vocab/vann/example")) {
 		w.WriteRune('\n')
 		w.WriteString(fmt.Sprintf(`<h%d id="sec-examples">Examples</h%d>`, level+1, level+1))
 		w.WriteRune('\n')
-		for _, obj := range c.Objects(IRI("http://purl.org/vocab/vann/example")) {
+		for _, obj := range c.Objects(rdf.IRI("http://purl.org/vocab/vann/example")) {
 			example := c.New(obj)
-			if comment, exists := example.FirstLiteral(IRI("http://www.w3.org/2000/01/rdf-schema#comment"), ""); exists {
+			if comment, exists := example.FirstLiteral(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#comment"), ""); exists {
 				w.WriteRune('\n')
 				w.WriteString(fmt.Sprintf(`<h%d>%s</h%d>`, level+2, html.EscapeString(example.Label(true, false)), level+2))
 				w.WriteRune('\n')
@@ -256,7 +256,7 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 			}
 
 		}
-		c.SetDone(IRI("http://purl.org/vocab/vann/example"))
+		c.SetDone(rdf.IRI("http://purl.org/vocab/vann/example"))
 	}
 
 	otherProperties := c.Properties(false)
@@ -266,5 +266,4 @@ func renderOntology(w *bufio.Writer, c *Context, inline bool, brief bool, level 
 		w.WriteRune('\n')
 		renderTable(w, c, false, false, level+1)
 	}
-
 }

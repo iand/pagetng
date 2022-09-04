@@ -8,19 +8,21 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/iand/ntriples"
+	"github.com/iand/gordf"
 )
 
-var o = flag.String("o", "html", "output format, one of md or html")
-var meta = flag.String("m", "", "filename of additonal front material to include verbatim")
+var (
+	o    = flag.String("o", "html", "output format, one of md or html")
+	meta = flag.String("m", "", "filename of additonal front material to include verbatim")
+)
 
 func main() {
 	flag.Parse()
 
 	if len(flag.Args()) < 2 {
 		fmt.Fprintln(os.Stderr, "Usage: pagetng <file> <uri>")
-		return
 		os.Exit(1)
+		return
 	}
 
 	filename := flag.Arg(0)
@@ -40,7 +42,7 @@ func main() {
 	}
 
 	g := &Graph{}
-	err := g.LoadNTriples(input)
+	err := g.LoadQuads(input)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
 		os.Exit(1)
@@ -53,9 +55,9 @@ func main() {
 	sin.Process(g)
 
 	c := &Context{
-		Term:  IRI(uri),
+		Term:  rdf.IRI(uri),
 		Graph: g,
-		Done:  map[ntriples.RdfTerm]bool{},
+		Done:  map[rdf.Term]bool{},
 	}
 
 	w := bufio.NewWriter(os.Stdout)

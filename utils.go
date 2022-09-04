@@ -8,7 +8,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/iand/ntriples"
+	"github.com/iand/gordf"
 )
 
 var prefixToNs = map[string]string{
@@ -93,8 +93,8 @@ func period(s string) string {
 }
 
 var rdfNumRegexp = regexp.MustCompile(`^http://www.w3.org/1999/02/22-rdf-syntax-ns#_([0-9]+)$`) // '~^[a-zA-Z][a-zA-Z0-9\-]+$~'
-func rdfListItem(t ntriples.RdfTerm) (int, bool) {
-	if !t.IsIRI() {
+func rdfListItem(t rdf.Term) (int, bool) {
+	if !rdf.IsIRI(t) {
 		return 0, false
 	}
 
@@ -144,21 +144,21 @@ func getPrefix(ns string) string {
 	return prefix
 }
 
-func qnameToIRI(qname string) ntriples.RdfTerm {
+func qnameToIRI(qname string) rdf.Term {
 	if c := strings.IndexRune(qname, ':'); c != -1 {
 		prefix := qname[:c]
 		if ns, exists := prefixToNs[prefix]; exists {
-			return IRI(ns + qname[c+1:])
+			return rdf.IRI(ns + qname[c+1:])
 		}
 	}
 
-	return ntriples.RdfTerm{} // TODO: is there a better return value?
+	return rdf.Term{} // TODO: is there a better return value?
 }
 
 var iriRegexp = regexp.MustCompile(`^(?i)(.*[/#])([a-z0-9-_:]+)$`) // '~^(.*[\/\#])([a-z0-9\-\_\:]+)$~i'
 
-func iriToQname(iri ntriples.RdfTerm) (string, error) {
-	if !iri.IsIRI() {
+func iriToQname(iri rdf.Term) (string, error) {
+	if !rdf.IsIRI(iri) {
 		return "", fmt.Errorf("cannot create QNames for non IRI terms")
 	}
 
@@ -170,7 +170,7 @@ func iriToQname(iri ntriples.RdfTerm) (string, error) {
 	return "", fmt.Errorf("cannot create QName")
 }
 
-func splitIRI(iri ntriples.RdfTerm) (string, string) {
+func splitIRI(iri rdf.Term) (string, string) {
 	matches := iriRegexp.FindStringSubmatch(iri.Value)
 	if len(matches) > 2 {
 		return matches[1], matches[2]
@@ -179,8 +179,8 @@ func splitIRI(iri ntriples.RdfTerm) (string, string) {
 }
 
 // termID returns a string for use in id attributes HTML documents, may return an empty string
-func termID(t ntriples.RdfTerm) string {
-	if t.IsIRI() {
+func termID(t rdf.Term) string {
+	if rdf.IsIRI(t) {
 		_, local := splitIRI(t)
 		return local
 	}
@@ -193,7 +193,7 @@ func (a AlphaContexts) Len() int           { return len(a) }
 func (a AlphaContexts) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a AlphaContexts) Less(i, j int) bool { return a[i].Label(false, true) < a[j].Label(false, true) }
 
-type orderedProperties []ntriples.RdfTerm
+type orderedProperties []rdf.Term
 
 func (o orderedProperties) Len() int      { return len(o) }
 func (o orderedProperties) Swap(i, j int) { o[i], o[j] = o[j], o[i] }

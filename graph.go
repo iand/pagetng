@@ -3,23 +3,25 @@ package main
 import (
 	"io"
 
-	"github.com/iand/ntriples"
+	"github.com/iand/gordf"
+	"github.com/iand/nquads"
 )
 
 type Graph struct {
-	Triples []ntriples.Triple
+	Triples []nquads.Quad
+	Name    rdf.Term
 }
 
-func (g *Graph) Add(s ntriples.RdfTerm, p ntriples.RdfTerm, o ntriples.RdfTerm) {
+func (g *Graph) Add(s rdf.Term, p rdf.Term, o rdf.Term) {
 	for _, t := range g.Triples {
 		if t.S == s && t.P == p && t.O == o {
 			return
 		}
 	}
-	g.Triples = append(g.Triples, ntriples.Triple{S: s, P: p, O: o})
+	g.Triples = append(g.Triples, nquads.Quad{S: s, P: p, O: o, G: g.Name})
 }
 
-func (g *Graph) Exists(s ntriples.RdfTerm, p ntriples.RdfTerm, o ntriples.RdfTerm) bool {
+func (g *Graph) Exists(s rdf.Term, p rdf.Term, o rdf.Term) bool {
 	for _, t := range g.Triples {
 		if t.S == s && t.P == p && t.O == o {
 			return true
@@ -28,7 +30,7 @@ func (g *Graph) Exists(s ntriples.RdfTerm, p ntriples.RdfTerm, o ntriples.RdfTer
 	return false
 }
 
-func (g *Graph) SubjectHasProperty(s ntriples.RdfTerm, p ntriples.RdfTerm) bool {
+func (g *Graph) SubjectHasProperty(s rdf.Term, p rdf.Term) bool {
 	for _, t := range g.Triples {
 		if t.S == s && t.P == p {
 			return true
@@ -38,7 +40,7 @@ func (g *Graph) SubjectHasProperty(s ntriples.RdfTerm, p ntriples.RdfTerm) bool 
 }
 
 // Subjects returns a list of subjects that have the given property and object
-func (g *Graph) Subjects(p, o ntriples.RdfTerm) []ntriples.RdfTerm {
+func (g *Graph) Subjects(p, o rdf.Term) []rdf.Term {
 	ts := termset{}
 	for _, t := range g.Triples {
 		if t.P == p && t.O == o {
@@ -49,7 +51,7 @@ func (g *Graph) Subjects(p, o ntriples.RdfTerm) []ntriples.RdfTerm {
 }
 
 // Subjects returns a list of subjects that have the given property
-func (g *Graph) SubjectsWithProperty(p ntriples.RdfTerm) []ntriples.RdfTerm {
+func (g *Graph) SubjectsWithProperty(p rdf.Term) []rdf.Term {
 	ts := termset{}
 	for _, t := range g.Triples {
 		if t.P == p {
@@ -60,8 +62,8 @@ func (g *Graph) SubjectsWithProperty(p ntriples.RdfTerm) []ntriples.RdfTerm {
 }
 
 // TriplesWithProperty returns a list of triples that have the given property
-func (g *Graph) TriplesWithProperty(p ntriples.RdfTerm) []ntriples.Triple {
-	triples := []ntriples.Triple{}
+func (g *Graph) TriplesWithProperty(p rdf.Term) []nquads.Quad {
+	triples := []nquads.Quad{}
 	for _, t := range g.Triples {
 		if t.P == p {
 			triples = append(triples, t)
@@ -71,7 +73,7 @@ func (g *Graph) TriplesWithProperty(p ntriples.RdfTerm) []ntriples.Triple {
 }
 
 // Properties returns a list of subjects that have the given subject and object
-func (g *Graph) Properties(s, o ntriples.RdfTerm) []ntriples.RdfTerm {
+func (g *Graph) Properties(s, o rdf.Term) []rdf.Term {
 	ts := termset{}
 	for _, t := range g.Triples {
 		if t.S == s && t.O == o {
@@ -82,7 +84,7 @@ func (g *Graph) Properties(s, o ntriples.RdfTerm) []ntriples.RdfTerm {
 }
 
 // Objects returns a list of objects that have the given subject and property
-func (g *Graph) Objects(s, p ntriples.RdfTerm) []ntriples.RdfTerm {
+func (g *Graph) Objects(s, p rdf.Term) []rdf.Term {
 	ts := termset{}
 	for _, t := range g.Triples {
 		if t.S == s && t.P == p {
@@ -92,16 +94,15 @@ func (g *Graph) Objects(s, p ntriples.RdfTerm) []ntriples.RdfTerm {
 	return ts.Terms()
 }
 
-func (g *Graph) LoadNTriples(r io.Reader) error {
-	n := ntriples.NewReader(r)
+func (g *Graph) LoadQuads(r io.Reader) error {
+	n := nquads.NewReader(r)
 
-	var err error
-	for t, err := n.Read(); err == nil; t, err = n.Read() {
-		g.Triples = append(g.Triples, t)
+	for n.Next() {
+		g.Triples = append(g.Triples, n.Quad())
 	}
 
-	if err != nil && err != io.EOF {
-		return err
+	if n.Err() != nil {
+		return n.Err()
 	}
 	return nil
 }
@@ -110,28 +111,14 @@ func (g *Graph) Count() int {
 	return len(g.Triples)
 }
 
-func IRI(iri string) ntriples.RdfTerm {
-	return ntriples.RdfTerm{
-		Value:    iri,
-		TermType: ntriples.RdfIri,
-	}
-}
+type termset map[rdf.Term]struct{}
 
-func PlainLiteral(s string) ntriples.RdfTerm {
-	return ntriples.RdfTerm{
-		Value:    s,
-		TermType: ntriples.RdfLiteral,
-	}
-}
-
-type termset map[ntriples.RdfTerm]struct{}
-
-func (ts termset) Add(t ntriples.RdfTerm) {
+func (ts termset) Add(t rdf.Term) {
 	ts[t] = struct{}{}
 }
 
-func (ts termset) Terms() []ntriples.RdfTerm {
-	r := make([]ntriples.RdfTerm, len(ts))
+func (ts termset) Terms() []rdf.Term {
+	r := make([]rdf.Term, len(ts))
 	for t := range ts {
 		r = append(r, t)
 	}

@@ -1,0 +1,4 @@
+github.com/iand/gordf v0.1.0 h1:4FnG3ImwKvFbHPnf8s/vJFGPfm7kWdMKW4gp72NfZYQ=
+github.com/iand/gordf v0.1.0/go.mod h1:r8dMOmZrCJq0LCkrXs7QfxpNBPjJ22XNGugur1GUOTc=
+github.com/iand/nquads v0.1.0 h1:mcBtjWQcHjK5FhBqJ+ggY/z45MvxIyL9XppTusbgLaY=
+github.com/iand/nquads v0.1.0/go.mod h1:caym8IgCAM2VYddocva4WV5499iR7sMhctzLidp+mkw=
