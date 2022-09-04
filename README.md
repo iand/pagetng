@@ -1,7 +1,6 @@
 pagetng - a basic RDF templating utility written in Go
 
-OVERVIEW
-========
+# Overview
 
 pagetng is a rewrite of an old PHP based tool I created called "paget" which was a general purpose RDF templating utility. This rewrite focusses only on the templating requirements I need to produce RDF schema documentation for http://vocab.org/
 
@@ -15,20 +14,17 @@ Invoke as follows, file must contain RDF data formatted as ntriples
 pagetng <file> <uri>
 ```
 
-INSTALLATION
-============
+# Getting Started
 
 Simply run
 
-	go get github.com/iand/pagetng
+	go install github.com/iand/pagetng
 
-Documentation is at [http://godoc.org/github.com/iand/pagetng](http://godoc.org/github.com/iand/pagetng)
+Documentation is at [https://pkg.go.dev/github.com/iand/pagetng](https://pkg.go.dev/github.com/iand/pagetng)
 
 
-LICENSE
-=======
-This code and associated documentation is in the public domain.
+# License
 
-To the extent possible under law, Ian Davis has waived all copyright
-and related or neighboring rights to this file. This work is published from the United Kingdom. 
+This is free and unencumbered software released into the public domain. For more
+information, see <http://unlicense.org/> or the accompanying [`UNLICENSE`](UNLICENSE) file.
 
