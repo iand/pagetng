@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/iand/gordf"
@@ -102,7 +103,7 @@ func (g *Graph) LoadQuads(r io.Reader) error {
 	}
 
 	if n.Err() != nil {
-		return n.Err()
+		return fmt.Errorf("nquads reader: %w", n.Err())
 	}
 	return nil
 }

@@ -73,25 +73,6 @@ func ucfirst(s string) string {
 	return string(unicode.ToUpper(r)) + s[n:]
 }
 
-func lcfirst(s string) string {
-	if s == "" {
-		return ""
-	}
-	r, n := utf8.DecodeRuneInString(s)
-	return string(unicode.ToLower(r)) + s[n:]
-}
-
-func period(s string) string {
-	if s == "" {
-		return ""
-	}
-	r, _ := utf8.DecodeLastRuneInString(s)
-	if r != '.' {
-		return s + "."
-	}
-	return s
-}
-
 var rdfNumRegexp = regexp.MustCompile(`^http://www.w3.org/1999/02/22-rdf-syntax-ns#_([0-9]+)$`) // '~^[a-zA-Z][a-zA-Z0-9\-]+$~'
 func rdfListItem(t rdf.Term) (int, bool) {
 	if !rdf.IsIRI(t) {
@@ -114,10 +95,7 @@ func getPrefix(ns string) string {
 		return prefix
 	}
 
-	nsRaw := ns
-	if strings.HasSuffix(nsRaw, "#") {
-		nsRaw = nsRaw[:len(nsRaw)-1]
-	}
+	nsRaw := strings.TrimSuffix(ns, "#")
 
 	parts := strings.Split(nsRaw, "/")
 	for i := len(parts) - 1; i >= 0; i-- {
@@ -142,17 +120,6 @@ func getPrefix(ns string) string {
 	prefixToNs[prefix] = ns
 
 	return prefix
-}
-
-func qnameToIRI(qname string) rdf.Term {
-	if c := strings.IndexRune(qname, ':'); c != -1 {
-		prefix := qname[:c]
-		if ns, exists := prefixToNs[prefix]; exists {
-			return rdf.IRI(ns + qname[c+1:])
-		}
-	}
-
-	return rdf.Term{} // TODO: is there a better return value?
 }
 
 var iriRegexp = regexp.MustCompile(`^(?i)(.*[/#])([a-z0-9-_:]+)$`) // '~^(.*[\/\#])([a-z0-9\-\_\:]+)$~i'

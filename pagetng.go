@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/iand/gordf"
@@ -68,7 +67,7 @@ func main() {
 		w.WriteString("uri: " + uri + "\n")
 
 		if *meta != "" {
-			frontmaterial, err := ioutil.ReadFile(*meta)
+			frontmaterial, err := os.ReadFile(*meta)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
 				os.Exit(1)
