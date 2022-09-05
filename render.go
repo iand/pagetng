@@ -188,7 +188,7 @@ func writeDl(w *bufio.Writer, c *Context, properties []rdf.Term, singular string
 
 func writeLinkedIRI(w *bufio.Writer, c *Context, label string, useDefiniteArticle bool) {
 	// Deal with blank nodes
-	if strings.HasPrefix(c.Term.Value, "_:") {
+	if rdf.IsBlank(c.Term) {
 		if label != "" {
 			w.WriteString(label)
 			return
