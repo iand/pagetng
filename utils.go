@@ -167,3 +167,21 @@ func (o orderedProperties) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
 func (o orderedProperties) Less(i, j int) bool {
 	return PreferredPropertyOrder[o[i]] > PreferredPropertyOrder[o[j]]
 }
+
+func removeLeadingSpace(s string) string {
+	pre := false
+	lines := strings.Split(s, "\n")
+	for i := range lines {
+		if !pre {
+			lines[i] = strings.TrimLeft(lines[i], " ")
+			if strings.Contains(lines[i], "<pre") {
+				pre = true
+			}
+		} else {
+			if strings.Contains(lines[i], "</pre>") {
+				pre = false
+			}
+		}
+	}
+	return strings.Join(lines, "\n")
+}

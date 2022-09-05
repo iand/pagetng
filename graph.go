@@ -119,7 +119,7 @@ func (ts termset) Add(t rdf.Term) {
 }
 
 func (ts termset) Terms() []rdf.Term {
-	r := make([]rdf.Term, len(ts))
+	r := make([]rdf.Term, 0, len(ts))
 	for t := range ts {
 		r = append(r, t)
 	}

@@ -127,7 +127,7 @@ func renderBrief(w *bufio.Writer, c *Context, inline bool, brief bool, level int
 	comment := c.Description()
 	if comment != "" {
 		w.WriteString(`<br />`)
-		w.WriteString(html.EscapeString(comment))
+		w.WriteString(removeLeadingSpace(html.EscapeString(comment)))
 	}
 }
 
@@ -154,9 +154,9 @@ func renderLiteral(w *bufio.Writer, c *Context, inline bool, brief bool, level i
 	}
 
 	if escapeValue {
-		w.WriteString(html.EscapeString(value))
+		w.WriteString(removeLeadingSpace(html.EscapeString(value)))
 	} else {
-		w.WriteString(value)
+		w.WriteString(removeLeadingSpace(value))
 	}
 	if c.Term.Language != "" {
 		w.WriteString(`<span class="lang">[`)
