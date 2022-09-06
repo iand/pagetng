@@ -34,6 +34,7 @@ var prefixToNs = map[string]string{
 	"ical":    "http://www.w3.org/2002/12/cal/ical#",
 	"icaltzd": "http://www.w3.org/2002/12/cal/icaltzd#",
 	"frbr":    "http://purl.org/vocab/frbr/core#",
+	"frbre":   "http://purl.org/vocab/frbr/extended#",
 
 	"ad":     "http://schemas.talis.com/2005/address/schema#",
 	"lib":    "http://schemas.talis.com/2005/library/schema#",

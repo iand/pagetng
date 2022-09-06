@@ -1,15 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"html"
+	"io"
 	"sort"
 
 	"github.com/iand/gordf"
 )
 
-func renderHistory(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func renderHistory(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
 	items := []string{}
 	for _, o := range c.Objects(rdf.IRI("http://purl.org/dc/terms/issued")) {
 		if rdf.IsLiteral(o) {

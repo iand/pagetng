@@ -164,6 +164,16 @@ func (c *Context) FirstIRI(p rdf.Term) (rdf.Term, bool) {
 	return rdf.IRI(""), false
 }
 
+func (c *Context) FirstObject(p rdf.Term) (rdf.Term, bool) {
+	for _, t := range c.Graph.Triples {
+		if t.S == c.Term && t.P == p {
+			return t.O, true
+		}
+	}
+
+	return rdf.IRI(""), false
+}
+
 func (c *Context) Label(capitalize bool, useQnames bool) string {
 	if rdf.IsLiteral(c.Term) {
 		value := c.Term.Value

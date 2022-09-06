@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"html"
+	"io"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/iand/gordf"
+	rdf "github.com/iand/gordf"
 )
 
 var DateLayouts = []string{
@@ -15,7 +16,7 @@ var DateLayouts = []string{
 	"2006-01-02",
 }
 
-type RenderFunc func(w *bufio.Writer, c *Context, inline bool, brief bool, level int)
+type RenderFunc func(w io.StringWriter, c *Context, inline bool, brief bool, level int)
 
 var PreferredPropertyOrder = map[rdf.Term]int{
 	rdf.IRI("http://www.w3.org/2004/02/skos/core#prefLabel"):   95,
@@ -66,9 +67,9 @@ type TypeRenderer struct {
 	Renderer RenderFunc
 }
 
-func render(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func render(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
 	if rdf.IsLiteral(c.Term) {
-		renderLiteral(w, c, inline, brief, level)
+		renderLiteral(w, c, inline, brief)
 		return
 	}
 
@@ -91,7 +92,7 @@ func render(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
 	renderTable(w, c, inline, brief, level)
 }
 
-func renderTable(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func renderTable(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
 	if brief {
 		renderBrief(w, c, inline, brief, level)
 		return
@@ -102,21 +103,21 @@ func renderTable(w *bufio.Writer, c *Context, inline bool, brief bool, level int
 	writePropertyValueList(w, c, op)
 }
 
-func renderRSS(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func renderRSS(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
 	// TODO
 }
 
-func renderSeq(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func renderSeq(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
 	// TODO
 }
 
-func renderBag(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func renderBag(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
 	// TODO
 }
 
-func renderBrief(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
-	if c.Term.Kind == rdf.LiteralTerm { // TODO: IsLiteral
-		renderLiteral(w, c, inline, brief, level)
+func renderBrief(w io.StringWriter, c *Context, inline bool, brief bool, level int) {
+	if rdf.IsLiteral(c.Term) {
+		renderLiteral(w, c, inline, brief)
 		return
 	}
 
@@ -131,7 +132,7 @@ func renderBrief(w *bufio.Writer, c *Context, inline bool, brief bool, level int
 	}
 }
 
-func renderLiteral(w *bufio.Writer, c *Context, inline bool, brief bool, level int) {
+func renderLiteral(w io.StringWriter, c *Context, inline bool, brief bool) {
 	if !rdf.IsLiteral(c.Term) {
 		return
 	}
@@ -165,7 +166,7 @@ func renderLiteral(w *bufio.Writer, c *Context, inline bool, brief bool, level i
 	}
 }
 
-func writeDl(w *bufio.Writer, c *Context, properties []rdf.Term, singular string, plural string) {
+func writeDl(w io.StringWriter, c *Context, properties []rdf.Term, singular string, plural string) {
 	vals := c.Objects(properties...)
 
 	if len(vals) == 0 {
@@ -186,7 +187,7 @@ func writeDl(w *bufio.Writer, c *Context, properties []rdf.Term, singular string
 	}
 }
 
-func writeLinkedIRI(w *bufio.Writer, c *Context, label string, useDefiniteArticle bool) {
+func writeLinkedIRI(w io.StringWriter, c *Context, label string, useDefiniteArticle bool) {
 	// Deal with blank nodes
 	if rdf.IsBlank(c.Term) {
 		if label != "" {
@@ -207,12 +208,12 @@ func writeLinkedIRI(w *bufio.Writer, c *Context, label string, useDefiniteArticl
 
 		if label != "" {
 			if useDefiniteArticle {
-				w.WriteRune('a')
+				w.WriteString("a")
 				if label[0] == 'a' || label[0] == 'e' || label[0] == 'i' || label[0] == 'o' || label[0] == 'u' ||
 					label[0] == 'A' || label[0] == 'E' || label[0] == 'I' || label[0] == 'O' || label[0] == 'U' {
-					w.WriteRune('n')
+					w.WriteString("n")
 				}
-				w.WriteRune(' ')
+				w.WriteString(" ")
 			}
 			w.WriteString(`<a href="`)
 			writeIRI(w, c.Term)
@@ -240,21 +241,21 @@ func writeLinkedIRI(w *bufio.Writer, c *Context, label string, useDefiniteArticl
 	w.WriteString(html.EscapeString(c.Term.Value))
 }
 
-func writeIRI(w *bufio.Writer, iri rdf.Term) {
+func writeIRI(w io.StringWriter, iri rdf.Term) {
 	// TODO: $this->urispace->resource_uri_to_request_uri($uri)
 	w.WriteString(html.EscapeString(iri.Value))
 }
 
-func writeLabelledIRI(w *bufio.Writer, c *Context, useDefiniteArticle bool) {
+func writeLabelledIRI(w io.StringWriter, c *Context, useDefiniteArticle bool) {
 	label := c.Label(true, true)
 	if label != c.Term.Value {
 		if useDefiniteArticle {
-			w.WriteRune('a')
+			w.WriteString("a")
 			if label[0] == 'a' || label[0] == 'e' || label[0] == 'i' || label[0] == 'o' || label[0] == 'u' ||
 				label[0] == 'A' || label[0] == 'E' || label[0] == 'I' || label[0] == 'O' || label[0] == 'U' {
-				w.WriteRune('n')
+				w.WriteString("n")
 			}
-			w.WriteRune(' ')
+			w.WriteString(" ")
 		}
 		w.WriteString(html.EscapeString(label))
 		return
@@ -270,7 +271,7 @@ func writeLabelledIRI(w *bufio.Writer, c *Context, useDefiniteArticle bool) {
 	}
 }
 
-func writePropertyValueList(w *bufio.Writer, c *Context, properties []rdf.Term) {
+func writePropertyValueList(w io.StringWriter, c *Context, properties []rdf.Term) {
 	headerWritten := false
 
 	rowClass := "odd"
@@ -317,7 +318,7 @@ func writePropertyValueList(w *bufio.Writer, c *Context, properties []rdf.Term) 
 		}
 
 		w.WriteString(`</td></tr>`)
-		w.WriteRune('\n')
+		w.WriteString("\n")
 		if rowClass == "odd" {
 			rowClass = "even"
 		} else {
@@ -331,4 +332,151 @@ func writePropertyValueList(w *bufio.Writer, c *Context, properties []rdf.Term) 
 	if headerWritten {
 		w.WriteString(`</table>`)
 	}
+}
+
+func writeAnonymousClass(w io.StringWriter, c *Context, label string) {
+	if label != "" {
+		w.WriteString(label)
+		return
+	}
+
+	// Deal with composite types
+	if coll, ok := c.FirstObject(rdf.IRI("http://www.w3.org/2002/07/owl#unionOf")); ok {
+		members := collectionMembers(c.New(coll))
+		switch len(members) {
+		case 1:
+			writeTerm(w, c.New(members[0]), false, true)
+			return
+		default:
+			w.WriteString("a class that is the union of ")
+			// something that, amongst other things, is a frbr:Work or a frbr:Expression
+			for i := range members {
+				if i > 0 {
+					w.WriteString(" and ")
+				}
+				writeTerm(w, c.New(members[i]), false, true)
+			}
+			return
+
+		}
+
+	}
+
+	if coll, ok := c.FirstObject(rdf.IRI("http://www.w3.org/2002/07/owl#intersectionOf")); ok {
+		members := collectionMembers(c.New(coll))
+		switch len(members) {
+		case 1:
+			writeTerm(w, c.New(members[0]), false, true)
+			return
+		default:
+			w.WriteString("a class that is the intersection of ")
+			for i := range members {
+				if i > 0 {
+					w.WriteString(" and ")
+				}
+				writeTerm(w, c.New(members[i]), false, true)
+			}
+			return
+
+		}
+
+	}
+
+	written := false
+	if c.Object(rdf.IRI("http://www.w3.org/2002/07/owl#complementOf")) {
+		if !written {
+			w.WriteString("a class that ")
+		}
+		writeRelationsProse(w, c, rdf.IRI("http://www.w3.org/2002/07/owl#complementOf"), "is the complement of ", "", false, "and", false, true)
+		written = true
+	}
+
+	if c.Object(rdf.IRI("http://www.w3.org/2002/07/owl#disjointWith")) {
+		if !written {
+			w.WriteString("a class that ")
+		} else {
+			w.WriteString("and ")
+		}
+		writeRelationsProse(w, c, rdf.IRI("http://www.w3.org/2002/07/owl#disjointWith"), "is disjoint with ", "", false, "and", false, true)
+		written = true
+	}
+
+	if c.Object(rdf.IRI("http://www.w3.org/2002/07/owl#equivalentClass")) {
+		if !written {
+			w.WriteString("a class that ")
+		} else {
+			w.WriteString("and ")
+		}
+		writeRelationsProse(w, c, rdf.IRI("http://www.w3.org/2002/07/owl#equivalentClass"), "is disjoint with ", "", false, "and", false, true)
+		written = true
+	}
+
+	if c.Object(rdf.IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf")) {
+		if !written {
+			w.WriteString("a class that ")
+		} else {
+			w.WriteString("and ")
+		}
+		writeRelationsProse(w, c, rdf.IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"), "is a sub class of ", "", false, "and", false, true)
+		written = true
+	}
+
+	if c.Type(rdf.IRI("http://www.w3.org/2002/07/owl#Restriction")) {
+
+		type restriction struct {
+			Type   string
+			Amount string
+			Term   rdf.Term
+		}
+		restrictions := []restriction{}
+
+		if c.Type(rdf.IRI("http://www.w3.org/2002/07/owl#Restriction")) {
+			if prop, exists := c.FirstIRI(rdf.IRI("http://www.w3.org/2002/07/owl#onProperty")); exists {
+				if value, exists := c.FirstLiteral(rdf.IRI("http://www.w3.org/2002/07/owl#cardinality")); exists {
+					restrictions = append(restrictions, restriction{"exactly", value.Value, prop})
+				}
+				if value, exists := c.FirstLiteral(rdf.IRI("http://www.w3.org/2002/07/owl#minCardinality")); exists {
+					restrictions = append(restrictions, restriction{"at least", value.Value, prop})
+				}
+				if value, exists := c.FirstLiteral(rdf.IRI("http://www.w3.org/2002/07/owl#maxCardinality")); exists {
+					restrictions = append(restrictions, restriction{"at most", value.Value, prop})
+				}
+			}
+		}
+
+		if len(restrictions) > 0 {
+			if !written {
+				w.WriteString("a class that has ")
+			} else {
+				w.WriteString("and has ")
+			}
+			for i, r := range restrictions {
+				if i > 0 {
+					if i == len(restrictions)-1 {
+						w.WriteString(" and ")
+					} else {
+						w.WriteString(", ")
+					}
+				}
+				w.WriteString(r.Type)
+				w.WriteString(" ")
+				w.WriteString(r.Amount)
+				w.WriteString(" ")
+				writeLinkedIRI(w, c.New(r.Term), "", false)
+				w.WriteString(" propert")
+				if n, err := strconv.Atoi(r.Amount); err == nil && n != 1 {
+					w.WriteString("ies")
+				} else {
+					w.WriteString("y")
+				}
+			}
+			written = true
+		}
+	}
+
+	if written {
+		return
+	}
+
+	w.WriteString("an anonymous class")
 }
