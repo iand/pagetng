@@ -1,6 +1,13 @@
-pagetng - a basic RDF templating utility written in Go
+# pagetng
 
-# Overview
+A basic RDF templating utility written in Go
+
+[![Check Status](https://github.com/iand/pagetng/actions/workflows/check.yml/badge.svg)](https://github.com/iand/pagetng/actions/workflows/check.yml)
+[![Test Status](https://github.com/iand/pagetng/actions/workflows/test.yml/badge.svg)](https://github.com/iand/pagetng/actions/workflows/test.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/iand/pagetng)](https://goreportcard.com/report/github.com/iand/pagetng)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/iand/pagetng)
+
+## Overview
 
 pagetng is a rewrite of an old PHP based tool I created called "paget" which was a general purpose RDF templating utility. This rewrite focusses only on the templating requirements I need to produce RDF schema documentation for http://vocab.org/
 
@@ -14,7 +21,7 @@ Invoke as follows, file must contain RDF data formatted as ntriples
 pagetng <file> <uri>
 ```
 
-# Getting Started
+## Getting Started
 
 Simply run
 
@@ -23,7 +30,7 @@ Simply run
 Documentation is at [https://pkg.go.dev/github.com/iand/pagetng](https://pkg.go.dev/github.com/iand/pagetng)
 
 
-# License
+## License
 
 This is free and unencumbered software released into the public domain. For more
 information, see <http://unlicense.org/> or the accompanying [`UNLICENSE`](UNLICENSE) file.
