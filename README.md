@@ -25,7 +25,7 @@ pagetng <file> <uri>
 
 Simply run
 
-	go install github.com/iand/pagetng
+	go install github.com/iand/pagetng@latest
 
 Documentation is at [https://pkg.go.dev/github.com/iand/pagetng](https://pkg.go.dev/github.com/iand/pagetng)
 
