@@ -1,4 +1,4 @@
 github.com/iand/gordf v0.1.6 h1:gW01zVL5lvDJTrsDY37rJ12ZnZ8lDHi/T2OqavX5i3U=
 github.com/iand/gordf v0.1.6/go.mod h1:jtw2VPo/1/vjXjkQWSC4TOUM6AdGG6/7a54LHCps6ek=
-github.com/iand/nquads v0.1.7 h1:i7N9QEgNsy9yBlwQnHGT921n8936JVuWQ0btB4bMJI8=
-github.com/iand/nquads v0.1.7/go.mod h1:wVeM3jhLlWi4GvS14FAmZXxdIFbz8b2q6g6CD6/LPqY=
+github.com/iand/nquads v0.1.8 h1:kyumsencH0ESOuFctUOpPp5CBR8HTJ4+cNGmdgSU9V8=
+github.com/iand/nquads v0.1.8/go.mod h1:N9JRYOgez92TylaOa0Tze7GEm7mXecpGV1BJkOxsxeY=
