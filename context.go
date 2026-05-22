@@ -2,6 +2,7 @@ package main
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -111,10 +112,8 @@ func (c *Context) Type(classes ...rdf.Term) bool {
 func (c *Context) Object(properties ...rdf.Term) bool {
 	for _, t := range c.Graph.Triples {
 		if t.S == c.Term {
-			for _, p := range properties {
-				if t.P == p {
-					return true
-				}
+			if slices.Contains(properties, t.P) {
+				return true
 			}
 		}
 	}
@@ -127,10 +126,8 @@ func (c *Context) Object(properties ...rdf.Term) bool {
 func (c *Context) Subject(properties ...rdf.Term) bool {
 	for _, t := range c.Graph.Triples {
 		if t.O == c.Term {
-			for _, p := range properties {
-				if t.P == p {
-					return true
-				}
+			if slices.Contains(properties, t.P) {
+				return true
 			}
 		}
 	}
@@ -143,10 +140,8 @@ func (c *Context) FirstLiteral(p rdf.Term, languages ...string) (rdf.Term, bool)
 			if len(languages) == 0 {
 				return t.O, true
 			}
-			for _, l := range languages {
-				if t.O.Language == l {
-					return t.O, true
-				}
+			if slices.Contains(languages, t.O.Language) {
+				return t.O, true
 			}
 		}
 	}

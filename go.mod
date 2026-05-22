@@ -1,6 +1,6 @@
 module github.com/iand/pagetng
 
-go 1.19
+go 1.26.2
 
 require (
 	github.com/iand/gordf v0.1.8
